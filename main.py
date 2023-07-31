@@ -74,6 +74,7 @@ def visitChrome(liveId='989786608822'):
     option = Options()
     option.add_argument("--disable-extensions")  # 给option对象添加无头参数
     option.add_argument("--ignore-certificate-errors")  # 忽略证书异常错误
+    option.set_capability("acceptInsecureCerts", True)
 
     web = Chrome(chrome_options=option)
     web.minimize_window()  # 窗口最小化
