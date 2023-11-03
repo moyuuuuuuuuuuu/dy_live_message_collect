@@ -98,13 +98,15 @@ class GUI(Tk):
     def createNewliveWindow(self):
         if self.spidering:
             messagebox.showinfo('提示', '正在采集，请勿重复操作')
+            return
             # self.createNewliveWindow()
         self.inputWindow = Toplevel(self, padx=5, pady=5)
         self.inputWindow.geometry(
             f"%dx%d+%d+%d" % (
                 self.mainWidth / 4, 40, (self.screenWidth - self.mainWidth / 4) // 2, (self.screenHeight - 40) / 2))
         self.inputWindow.protocol('WM_DELETE_WINDOW', self.closeInputWindow)
-        self.inputWindow.pack_slaves()
+        # self.inputWindow.grab_set()
+        # self.inputWindow.pack_slaves()
         Label(self.inputWindow, text='请输入直播间id:').grid(column=2, row=2)
         entryText = StringVar()
         entryText.trace('w', lambda name, index, mode, entryText=entryText: self.listenEntryChange(entryText))
@@ -123,15 +125,15 @@ class GUI(Tk):
         print(self.liveId)
         self.spidering = True
         self.messageFrame = MessageFrame(self)
-
+        self.messageFrame.title = '直播间弹幕采集'
         self.messageFrame.geometry(
             '%dx%d+%d+%d' % (self.mainWidth, self.mainHeight, (self.screenWidth - self.mainWidth) // 2 + 30,
                              (self.screenHeight - self.mainHeight) // 2 + 30))
-        self.messageFrame.title = '直播间弹幕采集'
         self.messageFrame.protocol('WM_DELETE_WINDOW', self.messageFrame.close)
+        # self.messageFrame.grab_set()
         # 更新主页面
-        self.update()
         self.messageFrame.pack_slaves()
         self.messageFrame.start(liveId=self.liveId)
+        self.update()
         # self.spider.visit()
         # visitChrome(self.liveId)
