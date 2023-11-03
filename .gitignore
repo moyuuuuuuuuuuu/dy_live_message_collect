@@ -4,3 +4,4 @@
 /dist/
 /build/
 /spider.bak.py
+__pycache__/*
