@@ -10,7 +10,7 @@ class MessageFrame(Toplevel):
         Button(master=self, text='采集结束', command=self.close).pack()
 
     def start(self, liveId):
-        from spider import Spider
+        from util.spider import Spider
         self.liveId = liveId
         self.spider = Spider(master=self, liveId=liveId)
         # self.spider.visit()

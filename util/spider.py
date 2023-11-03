@@ -11,7 +11,7 @@ from selenium.webdriver import Chrome
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from selenium.common.exceptions import NoSuchElementException, StaleElementReferenceException
-from pool import redisPool
+from util.pool import redisPool
 from component.MessageFrame import MessageFrame
 from tkinter import Text
 
