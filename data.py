@@ -1,49 +1,75 @@
-import math
+from pool import mysqlPool
 
 
 class Data:
-    limit = 30
-    currentPage = 10
-    maxPage = 20
-    count = 600
+    @staticmethod
+    def search(tablename='', where="", start=0, limit=30, order="id desc"):
+        print(start, limit)
+        if not tablename:
+            raise Exception("缺少表名")
 
-    def changeLimit(self, limit):
-        self.limit = limit
-        self.maxPage = math.ceil(self.count / self.limit)
+        count = 0
+        list = []
+        sql = "select * from {}".format(tablename)
+        if where:
+            sql = sql + " where " + where
+        if order:
+            sql = sql + " order by " + order
+        sql = sql + " limit %s,%s"
+        conn = mysqlPool.get_connection()
+        cursor = conn.cursor()
+        cursor.execute(sql, ((start - 1) * limit, limit,))
+        for row in cursor.fetchall():
+            list.append(row)
 
-    def loadData(self, start=0, limit=30):
-        list = [
-            [1, '123123132', '2022-11-22', '123123'],
-            [1, '123123132', '2022-11-22', '123123'],
-            [1, '123123132', '2022-11-22', '123123'],
-            [1, '123123132', '2022-11-22', '123123'],
-        ]
-        count = 600
+        cursor.close()
+        conn.close()
+
         if start <= 1:
-            self.currentPage = start
-            self.maxPage = math.ceil(count / limit)
+            sql = "SELECT count(1) FROM {}".format(tablename)
+            if where:
+                sql = sql + " where " + where
+            conn = mysqlPool.get_connection()
+            cursor = conn.cursor()
+            cursor.execute(sql)
+            count = cursor.fetchone()[0]
+            cursor.close()
+            conn.close()
         return {
             'list': list,
             'count': count
         }
 
-    def prev(self):
-        self.currentPage -= 1
-        if self.currentPage < 1:
-            self.currentPage = 1
-        self.loadData(self.currentPage, self.limit)
+    @staticmethod
+    def all(tablename='', where="", order="id desc"):
+        if not tablename:
+            raise Exception("缺少表名")
 
-    def next(self):
-        self.currentPage += 1
-        if self.currentPage > self.maxPage:
-            self.currentPage = self.maxPage
-        self.loadData(self.currentPage, self.limit)
+        list = []
+        sql = "select * from {}".format(tablename)
+        if where:
+            sql = sql + " where " + where
+        if order:
+            sql = sql + " order by " + order
+        conn = mysqlPool.get_connection()
+        cursor = conn.cursor()
+        cursor.execute(sql)
+        for row in cursor.fetchall():
+            list.append(row)
 
-    def page(self, page):
-        self.currentPage = page
-        self.loadData(self.currentPage, self.limit)
+        cursor.close()
+        conn.close()
+        return {
+            'list': list,
+            'count': len(list)
+        }
 
-    def refresh(self):
-        self.currentPage = 0
-        self.limit = 20
-        self.loadData(self.currentPage, self.limit)
+    @staticmethod
+    def deleteByPk(table, id):
+        sql = "delete from %s where id=%d"
+        conn = mysqlPool.get_connection()
+        cursor = conn.cursor()
+        cursor.execute(sql, (table, id))
+        conn.commit()
+        cursor.close()
+        conn.close()

@@ -11,32 +11,70 @@ from selenium.webdriver import Chrome
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from selenium.common.exceptions import NoSuchElementException, StaleElementReferenceException
-import pool
+from pool import redisPool
+from component.MessageFrame import MessageFrame
+from tkinter import Text
 
 
 class Spider():
-    def __init__(self):
-        print('初始化')
+    def __init__(self, liveId, master: MessageFrame):
+        self.liveId = liveId
+        self.master = master
 
     def getRedisClient(self):
-        redis.Redis(connection_pool=pool.pool)
+        redis.Redis(connection_pool=redisPool)
 
-    @staticmethod
-    def loadData(start=0, limit=30):
-        print('加载数据')
-        return {
-            'list': [
-                [1, '123123132', '2022-11-22', '123123'],
-                [1, '123123132', '2022-11-22', '123123'],
-                [1, '123123132', '2022-11-22', '123123'],
-                [1, '123123132', '2022-11-22', '123123'],
-            ],
-            'count': 111
-        }
+    def visit(self, liveId=''):
+        if not liveId:
+            liveId = self.liveId
+        pageUrl = "https://live.douyin.com/" + liveId
+
+        option = Options()
+        option.add_argument("--disable-extensions")  # 给option对象添加无头参数
+        option.add_argument("--ignore-certificate-errors")  # 忽略证书异常错误
+        option.set_capability("acceptInsecureCerts", True)
+
+        web = Chrome(options=option)
+        # web.minimize_window()  # 窗口最小化
+        web.get(pageUrl)
+        print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "启动了")
+        time.sleep(10)
+        while True:
+            eles = web.find_elements(By.CLASS_NAME, 'webcast-chatroom___enter-done')
+
+            if len(eles) > 0:
+                for ele in eles:
+                    redisConn = getRedis()
+                    try:
+                        es = ele.find_element(By.CLASS_NAME, 'webcast-chatroom___content-with-emoji-text')
+                        id = ele.get_attribute('data-id')
+                        hashKey = 'dy:message:hash:' + liveId + ':' + id
+
+                        if not es or redisConn.exists(hashKey):
+                            continue
+
+                        pushKey = 'dy:message:push:' + liveId
+                        redisConn.lpush(pushKey, id)
+
+                        redisConn.hset(hashKey, 'id', id)
+                        redisConn.hset(hashKey, 'content', es.text)
+                        redisConn.hset(hashKey, 'time', int(time.time()))
+                        print("%s-%s-%s" % (
+                            datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                            ele.get_attribute('data-id'),
+                            es.text))
+                        Text(self.master, text="%s-%s-%s" % (
+                            datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                            ele.get_attribute('data-id'),
+                            es.text)).pack(fill='x')
+                    except NoSuchElementException:
+                        pass
+                    except StaleElementReferenceException:
+                        pass
 
 
 def getRedis():
-    return redis.Redis(connection_pool=pool.pool)
+    return redis.Redis(connection_pool=redisPool)
 
 
 def export(liveId, delRemoteData):
@@ -88,44 +126,3 @@ def delData(liveId):
             redisClient.delete(key)
     redisClient.delete(pushKey)
     print('远端数据已清除')
-
-
-def visitChrome(liveId='989786608822'):
-    pageUrl = "https://live.douyin.com/" + liveId
-
-    option = Options()
-    option.add_argument("--disable-extensions")  # 给option对象添加无头参数
-    option.add_argument("--ignore-certificate-errors")  # 忽略证书异常错误
-    option.set_capability("acceptInsecureCerts", True)
-
-    web = Chrome(chrome_options=option)
-    web.minimize_window()  # 窗口最小化
-    web.get(pageUrl)
-    print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "启动了")
-    time.sleep(10)
-    while True:
-        eles = web.find_elements(By.CLASS_NAME, 'webcast-chatroom___enter-done')
-
-        if len(eles) > 0:
-            for ele in eles:
-                redisConn = getRedis()
-                try:
-                    es = ele.find_element(By.CLASS_NAME, 'webcast-chatroom___content-with-emoji-text')
-                    id = ele.get_attribute('data-id')
-                    hashKey = 'dy:message:hash:' + liveId + ':' + id
-
-                    if not es or redisConn.exists(hashKey):
-                        continue
-
-                    pushKey = 'dy:message:push:' + liveId
-                    redisConn.lpush(pushKey, id)
-
-                    redisConn.hset(hashKey, 'id', id)
-                    redisConn.hset(hashKey, 'content', es.text)
-                    redisConn.hset(hashKey, 'time', int(time.time()))
-
-                    print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), ele.get_attribute('data-id'), es.text)
-                except NoSuchElementException:
-                    pass
-                except StaleElementReferenceException:
-                    pass

@@ -1,14 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import math
-import tkinter
 from tkinter import *
-from tkinter import ttk
-from tkinter import filedialog, messagebox
-from tkinter.ttk import Treeview
 import hashlib
-from spider import *
+import math
 from data import *
+from component.DataList import DataList
+from tkinter import messagebox
+from component.MessageFrame import MessageFrame
 
 LOG_LINE_NUM = 0
 
@@ -16,9 +14,16 @@ LOG_LINE_NUM = 0
 class GUI(Tk):
     liveId = ''
     pageBarFrame = None
+    mainWidth = 0
+    mainHeight = 0
+    spidering = False
 
     def __init__(self):
         super().__init__()
+
+        self.screenWidth, self.screenHeight = self.winfo_screenwidth(), self.winfo_screenheight()
+        self.mainWidth, self.mainHeight = math.ceil(self.screenWidth / 2), math.ceil(self.screenHeight / 2)
+
         self.data = Data()
         self.setMainWindow()
         self.setMenuFrame()
@@ -26,9 +31,7 @@ class GUI(Tk):
 
     def setMainWindow(self):
         self.title("抖音直播弹幕采集")
-        width = self.winfo_screenwidth()
-        height = self.winfo_screenheight()
-        self.geometry('%dx%d' % (math.ceil(width / 2), math.ceil(height / 2)))
+        self.geometry('%dx%d' % (self.mainWidth, self.mainHeight))
         self.protocol('WM_DELETE_WINDOW', self.closeRoot)
 
     def setMenuFrame(self):
@@ -42,123 +45,68 @@ class GUI(Tk):
         refreshButton.pack(side=RIGHT)
 
     def closeRoot(self):
-        if messagebox.askokcancel("退出?", "确定退出吗?"):
-            self.destroy()
+        # if messagebox.askokcancel("退出?", "确定退出吗?"):
+        self.quit()
 
     def initTable(self):
-        columns = ('直播间ID', '采集时间', '弹幕数量')
-        area = ('直播间ID', '采集时间', '弹幕数量')
-        self.table = Treeview(self, columns=columns, show='headings', padding=(10, 10, 10, 10), height=10)
-        self.table.pack(fill='x')
+        columns = ('ID', '直播间ID', '采集时间', '弹幕数量', '是否导出excel', '是否导出词云')
+        headers = [
+            {
+                'text': 'ID',
+                'width': 80
+            },
+            {
+                'text': '直播间ID',
+                'width': 80
+            },
+            {
+                'text': '采集时间',
+                'width': 120
+            },
+            {
+                'text': '弹幕数量',
+            },
+            {
+                'text': '是否导出excel',
 
-        # limitFilterMenuBar = Menu(self)
-        # limitFilterMenu = Menu(limitFilterMenuBar, tearoff=0)
-        # limitFilterMenu.add_command(label='每页50条', command=lambda: Data.changeLimit(50))
-        # limitFilterMenu.add_command(label='每页100条', command=lambda: Data.changeLimit(100))
-        # limitFilterMenu.add_command(label='每页500条', command=lambda: Data.changeLimit(500))
-        # limitFilterMenu.add_command(label='每页1000条', command=lambda: Data.changeLimit(1000))
-        # limitFilterMenuBar.add_command(label='每页2000条', command=lambda: Data.changeLimit(2000))
-        for i in range(3):
-            self.table.column(columns[i], width=70, anchor='e')
-            self.table.heading(columns[i], text=area[i])
-        dataList = self.data.loadData(self.data.currentPage, self.data.limit)
-        self.initPageBar()
-        [list, count] = dataList.values()
-        print(list)
-        for item in list:
-            self.table.insert('', 'end', values=item)
-        # 计算页数
+            },
+            {
+                'text': '是否导出词云',
+            }
+        ]
+        replacements = {
+            4: {
+                'label': ['未导出', '已导出'],
+            },
+            5: {
+                'label': ['未导出', '已导出'],
+            }
+        }
+        self.tableFrame = DataList(self, width=self.mainWidth, height=self.mainHeight)
+        self.tableFrame.pack(fill='x')
+        self.tableFrame.setConfigure({'openPagination': True})
+        self.tableFrame.initTable(columns=columns, headers=headers, replacements=replacements, tablename='live')
+        self.tableFrame.start()
 
     def refreshTable(self):
-        # 刷新表格
-        self.data.refresh()
-        # 刷新分页器
-        self.initPageBar()
-
-    def initPageBar(self):
-        if self.pageBarFrame:
-            self.pageBarFrame.destroy()
-
-        self.pageBarFrame = Frame(self, width=self.winfo_screenwidth(), height=40, padx=5, pady=5, bg='#f3f3f3')
-        self.pageBarFrame.pack(fill='x')
-        # 按钮宽度
-        buttonWidth = 5
-        # 中间需要展示的翻页按钮数量
-        btnNumber = 12
-        # 初始页码计算
-        [currentPage, minPage, maxPage] = [self.data.currentPage, 1, self.data.maxPage]
-        # 首页按钮
-        firstBar = Button(self.pageBarFrame, text='首页', command=lambda: self.changePage(1), width=buttonWidth,
-                          foreground='#ff422e', background='#ffffff', font=('Arial', 12, 'bold'))
-        firstBar.pack(side=LEFT)
-        # 尾页按钮
-        endBar = Button(self.pageBarFrame, text='尾页', command=lambda: self.changePage(maxPage), width=buttonWidth,
-                        foreground='#ff422e', background='#ffffff', font=('Arial', 12, 'bold'))
-        endBar.pack(side=RIGHT)
-        # 上一页
-        prevBar = Button(self.pageBarFrame, text='< Prev', command=self.prevPage, width=buttonWidth,
-                         foreground='#ff422e', background='#ffffff', font=('Arial', 12, 'bold'))
-        prevBar.pack(side=LEFT)
-        # 下一页
-        nextBar = Button(self.pageBarFrame, text='Next >', command=self.nextPage, width=buttonWidth,
-                         foreground='#ff422e', background='#ffffff', font=('Arial', 12, 'bold'))
-        nextBar.pack(side=RIGHT)
-
-        if currentPage < minPage:
-            startPage = minPage
-            endPage = minPage + btnNumber
-        elif currentPage > maxPage:
-            startPage = maxPage - btnNumber
-            endPage = maxPage
-        elif currentPage + btnNumber > maxPage:
-            startPage = maxPage - btnNumber + 1
-            endPage = maxPage + 1
-        else:
-            startPage = currentPage
-            endPage = currentPage + btnNumber
-
-        print(startPage, endPage, "当前页%d" % currentPage,
-              "最小%d" % minPage, "最大%d" % maxPage, "按钮数量%d" % btnNumber)
-        for i in range(startPage, endPage):
-            if i == currentPage:
-                pageBar = Button(self.pageBarFrame, text=str(i), width=buttonWidth,
-                                 foreground='#ffffff', background='#ff422e', font=('Arial', 12, 'bold'))
-            else:
-                pageBar = Button(self.pageBarFrame, text=str(i), width=buttonWidth, command=lambda: self.changePage(i),
-                                 foreground='#ff422e', background='#ffffff', font=('Arial', 12, 'bold'))
-
-            pageBar.pack(side=LEFT)
-
-    def changePage(self, page):
-        print(page)
-        self.data.page(page=page)
-        self.initPageBar()
-
-    def nextPage(self):
-        self.data.next()
-        self.initPageBar()
-
-    def prevPage(self):
-        self.data.prev()
-        self.initPageBar()
+        self.tableFrame.reload()
 
     def listenEntryChange(self, entryText):
         self.liveId = entryText.get()
 
     def createNewliveWindow(self):
-        print('创建监听直播间窗口')
-        # self.inputWindow = tkinter.Toplevel(self.root)
-        # self.inputWindow.protocol('WM_DELETE_WINDOW', self.closeInputWindow)
-        # self.inputWindow.grid()
-        # label = Label(self.inputWindow, text='请输入直播间id')
-        # label.pack()
-        # entryText = StringVar()
-        # entryText.trace('w', lambda name, index, mode, entryText=entryText: self.listenEntryChange(entryText))
-        # input = Entry(self.inputWindow, bd=1, textvariable=entryText)
-        # input.pack()
-        # submit = Button(self.inputWindow, text='确定', command=self.createBeginListenLiveWindow)
-        # submit.propagate
-        # submit.pack()
+        if self.spidering:
+            messagebox.showinfo('提示', '正在采集，请勿重复操作')
+            # self.createNewliveWindow()
+        self.inputWindow = Toplevel(self, padx=5, pady=5)
+        self.inputWindow.geometry('%dx%d' % (self.mainWidth / 3, self.mainHeight / 3))
+        self.inputWindow.protocol('WM_DELETE_WINDOW', self.closeInputWindow)
+        self.inputWindow.pack_slaves()
+        Label(self.inputWindow, text='请输入直播间id:').grid(column=2, row=2)
+        entryText = StringVar()
+        entryText.trace('w', lambda name, index, mode, entryText=entryText: self.listenEntryChange(entryText))
+        Entry(self.inputWindow, bd=1, textvariable=entryText).grid(column=4, row=2)
+        Button(self.inputWindow, text='确定', command=self.createBeginListenLiveWindow).grid(column=6, row=2)
 
     def closeInputWindow(self):
         self.liveId = ''
@@ -166,10 +114,22 @@ class GUI(Tk):
         print(self.liveId)
 
     def createBeginListenLiveWindow(self):
-        print('抓取弹幕')
         self.inputWindow.destroy()
         # 创建一个ListBox窗口
-        visitChrome(self.liveId)
+        self.liveId = '44304010917'
+        print(self.liveId)
+        self.spidering = True
+        self.messageFrame = MessageFrame(self)
+
+        self.messageFrame.geometry('%dx%d' % (self.mainWidth, self.mainHeight))
+        self.messageFrame.title = '直播间弹幕采集'
+        self.messageFrame.protocol('WM_DELETE_WINDOW', self.messageFrame.close)
+        # 更新主页面
+        self.update()
+        self.messageFrame.pack_slaves()
+        self.messageFrame.start(liveId=self.liveId)
+        # self.spider.visit()
+        # visitChrome(self.liveId)
 
 
 class MY_GUI():
