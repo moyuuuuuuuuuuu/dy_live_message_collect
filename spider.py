@@ -14,6 +14,27 @@ from selenium.common.exceptions import NoSuchElementException, StaleElementRefer
 import pool
 
 
+class Spider():
+    def __init__(self):
+        print('初始化')
+
+    def getRedisClient(self):
+        redis.Redis(connection_pool=pool.pool)
+
+    @staticmethod
+    def loadData(start=0, limit=30):
+        print('加载数据')
+        return {
+            'list': [
+                [1, '123123132', '2022-11-22', '123123'],
+                [1, '123123132', '2022-11-22', '123123'],
+                [1, '123123132', '2022-11-22', '123123'],
+                [1, '123123132', '2022-11-22', '123123'],
+            ],
+            'count': 111
+        }
+
+
 def getRedis():
     return redis.Redis(connection_pool=pool.pool)
 
