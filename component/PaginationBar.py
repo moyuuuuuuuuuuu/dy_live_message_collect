@@ -49,25 +49,25 @@ class PaginationBar(Frame):
         else:
             startPage, endPage = currentPage, currentPage + btnNumber
 
-        print(self.root.currentPage, minPage, maxPage, startPage, endPage)
         for i in range(startPage, endPage):
             if i == currentPage:
                 pageBar = Button(self, text=str(i), width=self.buttonWidth,
                                  foreground='#ffffff', background='#ff422e', font=('Arial', 12, 'bold'))
             else:
-                pageBar = Button(self, text=str(i), width=self.buttonWidth, command=lambda: self.root.changePage(page=i),
+                pageBar = Button(self, text=str(i), width=self.buttonWidth,
+                                 command=lambda index=i: self.root.changePage(page=index),
                                  foreground='#ff422e', background='#ffffff', font=('Arial', 12, 'bold'))
             pageBar.pack(side=LEFT)
             self.pageBarButtonList.append(pageBar)
 
-    def changePage(self, page):
-        print(int(page))
-
-    def nextPage(self):
-        self.root.next()
-
-    def prevPage(self):
-        self.root.prev()
+    # def changePage(self, page):
+    #     self.root.changePage(page)
+    #
+    # def nextPage(self):
+    #     self.root.next()
+    #
+    # def prevPage(self):
+    #     self.root.prev()
 
     def upgrade(self):
         for button in self.pageBarButtonList:

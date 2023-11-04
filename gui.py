@@ -1,9 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/.env python
 # -*- coding: utf-8 -*-
-from tkinter import *
-import hashlib
+from tkinter import Frame,Button,Tk,LEFT,RIGHT
 import math
-from data import *
 from component.DataList import DataList
 from tkinter import messagebox
 from component.MessageFrame import MessageFrame
@@ -24,7 +22,6 @@ class GUI(Tk):
         self.screenWidth, self.screenHeight = self.winfo_screenwidth(), self.winfo_screenheight()
         self.mainWidth, self.mainHeight = math.ceil(self.screenWidth / 2), math.ceil(self.screenHeight / 2)
 
-        self.data = Data()
         self.setMainWindow()
         self.setMenuFrame()
         self.initTable()
@@ -83,11 +80,24 @@ class GUI(Tk):
                 'label': ['未导出', '已导出'],
             }
         }
-        self.tableFrame = DataList(self, width=self.mainWidth, height=self.mainHeight)
+        self.tableFrame = DataList(self, width=self.mainWidth, height=(self.mainHeight - 120))
         self.tableFrame.pack(fill='x')
-        self.tableFrame.setConfigure({'openPagination': True})
-        self.tableFrame.initTable(columns=columns, headers=headers, replacements=replacements, tablename='live')
-        self.tableFrame.start()
+        self.tableFrame.setConfigure(
+            openPagination=True,
+            limit=(self.mainHeight - 120) // 20,
+        )
+        self.tableFrame.initTable(
+            tablename='live',
+            columns=columns,
+            headers=headers,
+            replacements=replacements,
+            tags={
+                "odd": {
+                    "background": "#f0f0f0"
+                },
+            }
+        )
+        self.tableFrame.render()
 
     def refreshTable(self):
         self.tableFrame.reload()
@@ -103,10 +113,9 @@ class GUI(Tk):
         self.inputWindow = Toplevel(self, padx=5, pady=5)
         self.inputWindow.geometry(
             f"%dx%d+%d+%d" % (
-                self.mainWidth / 4, 40, (self.screenWidth - self.mainWidth / 4) // 2, (self.screenHeight - 40) / 2))
+                max(self.mainWidth / 4, 300), 40, (self.screenWidth - self.mainWidth / 4) // 2,
+                (self.screenHeight - 40) / 2))
         self.inputWindow.protocol('WM_DELETE_WINDOW', self.closeInputWindow)
-        # self.inputWindow.grab_set()
-        # self.inputWindow.pack_slaves()
         Label(self.inputWindow, text='请输入直播间id:').grid(column=2, row=2)
         entryText = StringVar()
         entryText.trace('w', lambda name, index, mode, entryText=entryText: self.listenEntryChange(entryText))

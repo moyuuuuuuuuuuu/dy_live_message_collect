@@ -1,7 +1,7 @@
 import math
 from tkinter import Frame, Menu, messagebox
 from tkinter.ttk import Treeview
-from data import Data
+from util.MysqlClient import MysqlClient
 
 
 class DataList(Frame):
@@ -23,6 +23,9 @@ class DataList(Frame):
         Frame.__init__(master=master, cnf=cnf, **kw)
         self.root = master
 
+    def setConfigure(self, **kwargs):
+        self.options.update(kwargs)
+
     def initTable(self, tablename='', columns=[], headers=[], replacements={}, tags={}):
         self.columns = columns
         self.headers = headers
@@ -34,9 +37,11 @@ class DataList(Frame):
         self.setTableHeader(columns=columns, headers=headers)
         self.table.bind('<Button-3>', self.opearMenu)
         self.initMenu()
-        if tags:
-            for tag in tags:
-                self.table.tag_configure(tag, background=tags[tag])
+        self.initTags(tags=tags)
+
+    def initTags(self, tags={}):
+        for tag in tags:
+            self.table.tag_configure(tag, **tags[tag])
 
     def opearMenu(self, event):
         self.selectedItemEq = self.table.identify_row(event.y)
@@ -56,13 +61,13 @@ class DataList(Frame):
         self.table.menu = menu
 
     def exportItem(self):
-        print(self.item)
+        pass
 
     def exportWordItem(self):
         print(self.item)
 
     def deleteItem(self):
-        Data.deleteByPk(self.table, int(self.item['values'][0]))
+        MysqlClient.deleteByPk(self.table, int(self.item['values'][0]))
         self.table.delete(self.selectedItemEq)
         items = self.table.get_children()
         for i, item in enumerate(items):
@@ -82,22 +87,24 @@ class DataList(Frame):
             self.table.heading(columns[i], text=text)
             self.table.column(columns[i], width=width, anchor='center')
 
-    def setConfigure(self, options={}):
-        self.options.update(options)
-
     def refresh(self):
-        [listData, total] = self.dataList.values()
+        listData, total = self.dataList.values()
         if self.currentPage == self.options.get('startPage', 1):
-            self.options['total'] = total
-            self.options['maxPage'] = math.ceil(total / self.options['limit'])
+            self.options.update({
+                'total': total,
+                'maxPage': math.ceil(total / self.options['limit'])
+            })
         if self.table.get_children():
             self.table.delete(*self.table.get_children())
-        for item in listData:
+        for i, item in enumerate(listData):
             modifyItem = list(item)
             for key, value in self.replacements.items():
                 modifyItem[key] = value['label'][item[key]]
             modified_tuple = tuple(modifyItem)
-            self.table.insert('', 'end', values=modified_tuple)
+            if i % 2 == 0:
+                self.table.insert('', 'end', values=modified_tuple)
+            else:
+                self.table.insert('', 'end', values=modified_tuple, tags=('odd',))
 
         if self.pageBarFrame:
             self.pageBarFrame.upgrade()
@@ -106,12 +113,13 @@ class DataList(Frame):
 
     def loadData(self):
         if self.options.get('openPagination', False):
-            self.dataList = Data.search(tablename=self.tablename, start=self.currentPage, limit=self.options['limit'])
+            self.dataList = MysqlClient.dataList(tablename=self.tablename, start=self.currentPage,
+                                               limit=self.options['limit'])
         else:
-            self.dataList = Data.all(tablename=self.tablename)
+            self.dataList = MysqlClient.all(tablename=self.tablename)
         return self
 
-    def start(self):
+    def render(self):
         self.loadData().refresh()
 
     def prev(self):
