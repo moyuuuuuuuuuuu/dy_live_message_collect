@@ -3,8 +3,28 @@ from pandas import DataFrame
 
 pandas.options.mode.chained_assignment = None
 
+"""
+count = MysqlClient.count('live')
+    limit = 100
+    maxPage = int(count / limit) + 1
+    print(maxPage)
+    start = 1
+    export = Exporter('test', ['id', '直播间ID', '发弹幕人数', '抓取时间'])
+
+    for start in range(maxPage):
+        list = MysqlClient.select(tablename='live', field='id,live_id,number,created_at', start=start + 1, limit=limit,
+                                  order='number desc')
+        # , start=(start - 1) * limit
+        export.append(data=list)
+    export.save()
+
+"""
+
 
 class Exporter:
+    """
+    导出到Excel
+    """
     writer: pandas.ExcelWriter = None
     sheetDataFrame: DataFrame = {}
     sheetNameList: list = []
@@ -21,7 +41,6 @@ class Exporter:
         dataFrame = pandas.DataFrame(columns=columns)
         dataFrame.set_index(self.columns[sheetName][0])
         self.sheetDataFrame[sheetName] = dataFrame
-
 
     def addSheet(self, sheetName='Sheet2', columns=[]):
         """
