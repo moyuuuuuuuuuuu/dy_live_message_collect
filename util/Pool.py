@@ -13,4 +13,5 @@ mysqlPool = MySQLConnectionPool(
     pool_size=int(os.getenv('MYSQL_POOL_SIZE')),
 )
 redisPool = redis.ConnectionPool(host=os.getenv('REDIS_HOST'), port=os.getenv('REDIS_PORT'), db=os.getenv('REDIS_DB'),
-                                 password=os.getenv('REDIS_PASSWORD'))
+                                 password=os.getenv('REDIS_PASSWORD'),  encoding='UTF-8',
+                                 decode_responses=True)

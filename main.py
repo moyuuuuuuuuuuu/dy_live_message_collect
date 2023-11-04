@@ -1,7 +1,8 @@
 from dotenv import load_dotenv
 from gui import *
-from util.MysqlClient import MysqlClient
-from util.Exporter import Exporter
+from logic.Logic import Logic, getRedisClient
+import json
+from util.Pool import redisPool
 
 
 def gui_start():
@@ -13,4 +14,4 @@ def gui_start():
 if __name__ == '__main__':
     load_dotenv()
     gui_start()
-    
+

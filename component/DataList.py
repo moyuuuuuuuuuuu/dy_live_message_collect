@@ -2,6 +2,7 @@ import math
 from tkinter import Frame, Menu, messagebox
 from tkinter.ttk import Treeview
 from util.MysqlClient import MysqlClient
+from logic.Logic import Logic
 
 
 class DataList(Frame):
@@ -61,10 +62,10 @@ class DataList(Frame):
         self.table.menu = menu
 
     def exportItem(self):
-        pass
+        Logic.exportLiveDataToExcel(self.item['values'])
 
     def exportWordItem(self):
-        print(self.item)
+        Logic.exportLiveDataToWordCloud(self.item['values'])
 
     def deleteItem(self):
         MysqlClient.deleteByPk(self.table, int(self.item['values'][0]))
@@ -114,7 +115,7 @@ class DataList(Frame):
     def loadData(self):
         if self.options.get('openPagination', False):
             self.dataList = MysqlClient.dataList(tablename=self.tablename, start=self.currentPage,
-                                               limit=self.options['limit'])
+                                                 limit=self.options['limit'])
         else:
             self.dataList = MysqlClient.all(tablename=self.tablename)
         return self

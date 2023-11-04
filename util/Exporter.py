@@ -65,10 +65,10 @@ class Exporter:
             return True
         return False
 
-    def append(self, data=[], sheetName='Sheet1', axis=0):
-        row = {key: [] for key in self.columns}
+    def append(self, data, sheetName='Sheet1', axis=0):
+        row = {key: [] for key in self.columns[sheetName]}
         for idx, item in enumerate(data):
-            for i, key in enumerate(self.columns):
+            for i, key in enumerate(self.columns[sheetName]):
                 row[key].append(item[i])
 
         # 写入DataFrame
