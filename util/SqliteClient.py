@@ -1,17 +1,17 @@
-from util.Pool import mysqlPool
+from util.Pool import getSqliteConn
 
 
-class MysqlClient:
+class SqliteClient:
 
     @staticmethod
     def _exec(sql, fetch='all', params=None, **kwargs):
-        conn = mysqlPool.get_connection()
+        conn = getSqliteConn()
         cursor = conn.cursor()
         cursor.execute(sql, params)
 
         fetchFuncList = {
-            "all": MysqlClient.fetchall,
-            "one": MysqlClient.fetchone,
+            "all": SqliteClient.fetchall,
+            "one": SqliteClient.fetchone,
         }
         if fetch not in fetchFuncList:
             raise Exception("fetch参数错误")
@@ -30,20 +30,20 @@ class MysqlClient:
         sql = "select {} from {}".format(field, tablename)
         args = ()
         if where:
-            whereString, whereArgs = MysqlClient.buildWhere(where)
+            whereString, whereArgs = SqliteClient.buildWhere(where)
             sql += " where {}".format(whereString)
             args += whereArgs
         if order:
             sql = sql + " order by " + order
         sql = sql + " limit %s,%s"
         args += ((start - 1) * limit, limit,)
-        list = MysqlClient._exec(sql, params=args)
+        list = SqliteClient._exec(sql, params=args)
 
         if start <= 1:
             sql = "SELECT count(1) FROM {} {}".format(tablename, 'limit 1')
             if where:
                 sql = sql + " where " + where
-            count = MysqlClient._exec(sql, fetch='one', column=0)
+            count = SqliteClient._exec(sql, fetch='one', column=0)
         return {
             'list': list,
             'count': count
@@ -54,25 +54,25 @@ class MysqlClient:
         sql = "select {} from {} ".format(field, tablename)
         args = ()
         if where:
-            whereString, whereArgs = MysqlClient.buildWhere(where)
+            whereString, whereArgs = SqliteClient.buildWhere(where)
             sql += " where {}".format(whereString)
             args += whereArgs
         if order:
             sql += " order by " + order
         sql += " limit %s,%s"
         args += ((start - 1) * limit, limit,)
-        return MysqlClient._exec(sql, params=args)
+        return SqliteClient._exec(sql, params=args)
 
     @staticmethod
     def one(tablename='', field='*', where='', order='id desc'):
         sql = "select {} from {} ".format(field, tablename)
         args = ()
         if where:
-            whereString, whereArgs = MysqlClient.buildWhere(where)
+            whereString, whereArgs = SqliteClient.buildWhere(where)
             sql += " where {}".format(whereString)
             args += whereArgs
         sql += " order by " + order + " limit 1"
-        return MysqlClient._exec(sql, fetch='one', params=args)
+        return SqliteClient._exec(sql, fetch='one', params=args)
 
     @staticmethod
     def all(tablename='', where="", order="id desc"):
@@ -82,12 +82,12 @@ class MysqlClient:
         args = ()
         sql = "select * from {}".format(tablename)
         if where:
-            whereString, whereArgs = MysqlClient.buildWhere(where)
+            whereString, whereArgs = SqliteClient.buildWhere(where)
             sql += " where {}".format(whereString)
             args += whereArgs
         if order:
             sql += " order by {}".format(order)
-        list = MysqlClient._exec(sql, params=args)
+        list = SqliteClient._exec(sql, params=args)
         return {
             'list': list,
             'count': len(list)
@@ -100,10 +100,10 @@ class MysqlClient:
         args = ()
         sql = "select count(1) from {} ".format(tablename)
         if where:
-            whereString, whereArgs = MysqlClient.buildWhere(where)
+            whereString, whereArgs = SqliteClient.buildWhere(where)
             sql += " where {}".format(whereString)
             args += whereArgs
-        return MysqlClient._exec(sql, fetch='one', column=0, params=args)
+        return SqliteClient._exec(sql, fetch='one', column=0, params=args)
 
     @staticmethod
     def insert(tablename, **kwargs):
@@ -112,7 +112,7 @@ class MysqlClient:
         keys = list(kwargs.keys())
         values = list(kwargs.values())
         sql = "insert into {} ({}) values ({})".format(tablename, ','.join(keys), ','.join(['%s'] * len(values)))
-        conn = mysqlPool.get_connection()
+        conn = getSqliteConn()
         cursor = conn.cursor()
         cursor.execute(sql, values)
         lastInertId = cursor.lastrowid
@@ -128,13 +128,13 @@ class MysqlClient:
         values = tuple(list(kwargs.values()))
         sql = "update {} set {} ".format(tablename, ','.join(['{}=%s'.format(key) for key in keys]))
         if where:
-            whereString, whereArgs = MysqlClient.buildWhere(where)
+            whereString, whereArgs = SqliteClient.buildWhere(where)
             sql += " where {}".format(whereString)
             values = values + whereArgs
-        conn = mysqlPool.get_connection()
+        conn = getSqliteConn()
         cursor = conn.cursor()
         cursor.execute(sql, values)
-        modifyLine = cursor.rowcount
+        modifyLine = cursor.total_changes
         conn.close()
         cursor.close()
         return modifyLine
@@ -142,13 +142,14 @@ class MysqlClient:
     @staticmethod
     def deleteByPk(table, id):
         sql = "delete from {} where id={}".format(table, id)
-        conn = mysqlPool.get_connection()
+        conn = getSqliteConn()
         cursor = conn.cursor()
         cursor.execute(sql)
         conn.commit()
+        changeLine = conn.total_changes
         cursor.close()
         conn.close()
-        return cursor.rowcount
+        return changeLine
 
     @staticmethod
     def delete(tablename, where=''):
@@ -157,13 +158,16 @@ class MysqlClient:
         args = ()
         sql = "delete from {} ".format(tablename)
         if where:
-            whereString, whereArgs = MysqlClient.buildWhere(where)
+            whereString, whereArgs = SqliteClient.buildWhere(where)
             sql += " where {}".format(whereString)
             args += whereArgs
-        conn = mysqlPool.get_connection()
+        conn = getSqliteConn()
         cursor = conn.cursor()
         cursor.execute(sql, args)
-        return cursor.rowcount
+        changeLine = conn.total_changes
+        cursor.close()
+        conn.close()
+        return changeLine
 
     @staticmethod
     def fetchone(cursor, **kwargs):

@@ -62,13 +62,18 @@ class DataList(Frame):
         self.table.menu = menu
 
     def exportItem(self):
-        Logic.exportLiveDataToExcel(self.item['values'])
+        success, message = Logic.liveMessageDataToExcel(self.item['values'])
+        if success:
+            messagebox.showinfo('导出成功', message)
+        else:
+            messagebox.showinfo('导出失败', message)
 
     def exportWordItem(self):
-        Logic.exportLiveDataToWordCloud(self.item['values'])
+        Logic.liveMessageDataToWordCloud(self.item['values'])
 
     def deleteItem(self):
-        MysqlClient.deleteByPk(self.table, int(self.item['values'][0]))
+        a = MysqlClient.deleteByPk(self.tablename, int(self.item['values'][0]))
+        print(a)
         self.table.delete(self.selectedItemEq)
         items = self.table.get_children()
         for i, item in enumerate(items):

@@ -1,3 +1,5 @@
+import os.path
+
 from util.MysqlClient import MysqlClient
 from util.Pool import redisPool
 from util.Exporter import Exporter
@@ -19,12 +21,12 @@ class Logic:
         listLength = redisClient.llen(pushKey)
 
         if listLength <= 0:
-            print('远端无直播间id为[%s]的数据。请确认直播间id' % liveId)
-            sys.exit(0)
+            return False, '远端无直播间id为[%s]的数据。请确认直播间id' % liveId
         limit = 1000  # 每批写入的行数
         num_batches = math.ceil(listLength / limit)  # 总批数
+        filename = "%s-%s的直播弹幕数据" % (datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S'), liveId)
         export = Exporter(
-            filename="%s-%s的直播弹幕数据" % (datetime.datetime.now().strftime('%Y-%m-%d%H%M%S'), liveId),
+            filename=filename,
             columns=['弹幕ID', '弹幕内容', '发布时间'])
         for i in range(num_batches):
             start = i * limit
@@ -38,8 +40,8 @@ class Logic:
                 pageData.append(list(message.values()))
             export.append(data=pageData)
         export.save()
-        print('导出完毕,可查看文件')
-        pass
+        MysqlClient.update('live', where={'id': id}, data={'is_excel': isExcel})
+        return True, '导出成功'
 
     @staticmethod
     def liveMessageDataToWordCloud(item):

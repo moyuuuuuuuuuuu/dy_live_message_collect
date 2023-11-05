@@ -1,15 +1,16 @@
 #!/usr/bin/.env python
 # -*- coding: utf-8 -*-
-from tkinter import Frame,Button,Tk,LEFT,RIGHT
+from tkinter import Frame, Button, Tk, LEFT, RIGHT, Toplevel, Label, Entry, StringVar, Text, messagebox
 import math
 from component.DataList import DataList
-from tkinter import messagebox
 from component.MessageFrame import MessageFrame
+from component.InputGoodsWindow import InputGoodsWindow
+from component.InputLiveWindow import InputLiveWindow
 
 LOG_LINE_NUM = 0
 
 
-class GUI(Tk):
+class MainWindow(Tk):
     liveId = ''
     pageBarFrame = None
     mainWidth = 0
@@ -23,6 +24,7 @@ class GUI(Tk):
         self.mainWidth, self.mainHeight = math.ceil(self.screenWidth / 2), math.ceil(self.screenHeight / 2)
 
         self.setMainWindow()
+        self.setMainMenu()
         self.setMenuFrame()
         self.initTable()
 
@@ -32,11 +34,24 @@ class GUI(Tk):
                                        (self.screenHeight - self.mainHeight) // 2))
         self.protocol('WM_DELETE_WINDOW', self.closeRoot)
 
+    def setMainMenu(self):
+        pass
+        # menuBar = Menu(self)
+        # # 创建文件的联级菜单
+        # menu = Menu(menuBar, tearoff=0)
+        # menu.add_command(label='直播间列表', accelerator='Ctrl+N')
+        # menu.add_command(label='商品列表', accelerator='Ctrl+O')
+        # menuBar.add_cascade(label='模式', menu=menu)
+        # self['menu'] = menuBar
+
     def setMenuFrame(self):
         menuFrame = Frame(self, width=self.winfo_screenwidth(), height=40, padx=5, pady=5)
         menuFrame.pack(fill='x')
 
-        createButton = Button(menuFrame, command=self.createNewliveWindow, text='打开直播间')
+        createButton = Button(menuFrame, command=self.createLiveInputWindow, text='打开直播间')
+        createButton.pack(side=LEFT)
+
+        createButton = Button(menuFrame, command=self.createGoodsInputWindow, text='导入商品信息')
         createButton.pack(side=LEFT)
 
         refreshButton = Button(menuFrame, command=self.refreshTable, text='刷新')
@@ -105,29 +120,35 @@ class GUI(Tk):
     def listenEntryChange(self, entryText):
         self.liveId = entryText.get()
 
-    def createNewliveWindow(self):
+    def createGoodsInputWindow(self):
+        self.inputGoodsWindow = InputGoodsWindow(self)
+        self.inputGoodsWindow.show()
+
+    def createGoodsWindow(self):
+        pass
+
+    def closeGoodsInputWindow(self):
+        pass
+
+    def createLiveInputWindow(self):
         if self.spidering:
             messagebox.showinfo('提示', '正在采集，请勿重复操作')
             return
-            # self.createNewliveWindow()
-        self.inputWindow = Toplevel(self, padx=5, pady=5)
-        self.inputWindow.geometry(
-            f"%dx%d+%d+%d" % (
-                max(self.mainWidth / 4, 300), 40, (self.screenWidth - self.mainWidth / 4) // 2,
-                (self.screenHeight - 40) / 2))
-        self.inputWindow.protocol('WM_DELETE_WINDOW', self.closeInputWindow)
-        Label(self.inputWindow, text='请输入直播间id:').grid(column=2, row=2)
-        entryText = StringVar()
-        entryText.trace('w', lambda name, index, mode, entryText=entryText: self.listenEntryChange(entryText))
-        Entry(self.inputWindow, bd=1, textvariable=entryText).grid(column=4, row=2)
-        Button(self.inputWindow, text='确定', command=self.createBeginListenLiveWindow).grid(column=6, row=2)
+        self.inputWindow = InputLiveWindow(self, padx=5, pady=5)
+        self.inputWindow.show()
+        return
+        # Label(self.inputWindow, text='请输入直播间id:').grid(column=2, row=2)
+        # entryText = StringVar()
+        # entryText.trace('w', lambda name, index, mode, entryText=entryText: self.listenEntryChange(entryText))
+        # Entry(self.inputWindow, bd=1, textvariable=entryText).grid(column=4, row=2)
+        # Button(self.inputWindow, text='确定', command=self.createListenLiveWindow).grid(column=6, row=2)
 
-    def closeInputWindow(self):
+    def closeLiveInputWindow(self):
         self.liveId = ''
         self.inputWindow.destroy()
         print(self.liveId)
 
-    def createBeginListenLiveWindow(self):
+    def createListenLiveWindow(self):
         self.inputWindow.destroy()
         # 创建一个ListBox窗口
         self.liveId = '44304010917'
