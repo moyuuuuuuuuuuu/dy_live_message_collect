@@ -35,9 +35,6 @@ class LiveListenWindow(Toplevel):
         self.thread.start()
         self.thread.join()
 
-    def startSpider(self, liveId='', userDictFile='', treeview=None):
-        pass
-
     def warning(self):
         if messagebox.showinfo('提示', '直播已经结束'):
             self.spidering = False
