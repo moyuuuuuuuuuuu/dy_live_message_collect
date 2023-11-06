@@ -1,15 +1,12 @@
 from tkinter import Toplevel, Frame, Label
 from tkinter.ttk import Progressbar
 import time
-from threading import Thread
 
 
 class Progress:
     def __init__(
             self,
             master=None,
-            width=300,
-            height=100,
             text="加载中",
             bg="gray",
             fg="white",
@@ -31,11 +28,7 @@ class Progress:
         # 创建进度条
         progress_bar = Progressbar(progress_window, length=200, mode=mode)
         progress_bar.pack(pady=20)
-
-        while True:
-            progress_bar['value'] += 1
-            progress_bar.update()
-            time.sleep(0.05)
+        progress_bar.start()
 
     def update_progress(progress_bar):
         while True:
@@ -44,5 +37,4 @@ class Progress:
             time.sleep(0.05)
 
     def close(self):
-        self.thread.close()
         self.progress_window.destroy()

@@ -1,4 +1,6 @@
 from util.Pool import mysqlPool
+from util.Logger import logger
+from mysql.connector.errors import Error as MysqlError
 
 
 class MysqlClient:
@@ -111,14 +113,35 @@ class MysqlClient:
             raise Exception("缺少表名")
         keys = list(kwargs.keys())
         values = list(kwargs.values())
-        sql = "insert into {} ({}) values ({})".format(tablename, ','.join(keys), ','.join(['%s'] * len(values)))
+        sql = "insert into {} ({}) values ({})".format(tablename, ','.join(keys), ','.join(['%s'] * len(keys)))
         conn = mysqlPool.get_connection()
         cursor = conn.cursor()
         cursor.execute(sql, values)
         lastInertId = cursor.lastrowid
-        conn.close()
         cursor.close()
+        conn.close()
         return lastInertId
+
+    @staticmethod
+    def batchInsert(tablename, columns, data):
+        if not tablename:
+            raise Exception("缺少表名")
+        keys = columns
+        sql = "insert into {} ({}) values ({})".format(tablename, ','.join(keys), ','.join(['?'] * len(columns)))
+        conn = mysqlPool.get_connection()
+        cursor = conn.cursor()
+        cursor.execute('BEGIN TRANSACTION')
+        try:
+            cursor.executemany(sql, data)
+        except MysqlError as e:
+            logger.error("Sqlite插入数据时发生错误:%s" % e)
+            # 回滚事务
+            conn.rollback()
+            return False
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return True
 
     @staticmethod
     def update(tablename, where='', **kwargs):

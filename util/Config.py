@@ -1,4 +1,5 @@
 class Config(object):
+    config = {}
     @classmethod
     def instance(cls, *args, **kwargs):
         if not hasattr(Config, "_instance"):

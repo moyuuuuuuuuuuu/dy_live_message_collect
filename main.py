@@ -58,9 +58,10 @@ Install_SQL = '''
 CREATE TABLE IF NOT EXISTS goods (
     id INTEGER PRIMARY KEY,
     name VARCHAR(150) NOT NULL,
-    keyword VARCHAR(50) NOT NULL ,
-    stock INT
-    price DECIMAL(10,2)
+    weight VARCHAR(50) NOT NULL ,
+    g INT NOT NULL DEFAULT 0 ,
+    price DECIMAL(10,2),
+    remark VARCHAR(150) NOT NULL DEFAULT ''
 )
 '''
 
@@ -68,6 +69,7 @@ CREATE TABLE IF NOT EXISTS goods (
 def root():
     masterWindow = MainWindow()
     masterWindow.mainloop()
+
 
 def start_progress(progress_bar):
     progress_bar.start()
@@ -77,17 +79,15 @@ def stop_progress(progress_bar):
     progress_bar.stop()
 
 
-# 按装订区域中的绿色按钮以运行脚本。
-if __name__ == '__main__':
-    load_dotenv()
-
+def registerConfig():
     INSTALL_DIR = os.path.expanduser('~') + os.getenv('INSTALL_PATH')
     SQLITE_DIR = INSTALL_DIR + os.getenv('SQLITE_DIR')
     SQLITE_DB_NAME = os.getenv('SQLITE_DB')
     SQLITE_DB = SQLITE_DIR + SQLITE_DB_NAME + '.db'
     LOCK_FILE_DIR = INSTALL_DIR + os.getenv('LOCK_FILE_DIR')
     LOCK_FILE = LOCK_FILE_DIR + os.getenv('LOCK_FILE')
-    INSTALL_SQL_FILE = INSTALL_DIR + os.getenv('INSTALL_SQL_FILE')
+    LOG_FILE_DIR = INSTALL_DIR + os.getenv('LOG_FILE_DIR')
+    LOG_FILENAME_FORMAT = LOG_FILE_DIR + os.getenv('LOG_FILENAME_FORMAT')
     Config.instance().setConfig(
         install_dir=INSTALL_DIR,
         sqlite_dir=SQLITE_DIR,
@@ -95,12 +95,18 @@ if __name__ == '__main__':
         sqlite_db_name=SQLITE_DB_NAME,
         lock_file_dir=LOCK_FILE_DIR,
         lock_file=LOCK_FILE,
-        install_sql=Install_SQL
+        install_sql=Install_SQL,
+        log_file_dir=LOG_FILE_DIR,
+        LOG_FILENAME_FORMAT=LOG_FILENAME_FORMAT
     )
 
-    # 检测是否安装
-    if not os.path.exists(LOCK_FILE):
-        Install().install()
+
+# 按装订区域中的绿色按钮以运行脚本。
+if __name__ == '__main__':
+    load_dotenv()
+    registerConfig()
+    Install().installChk()
+
     # app()
 
     root()

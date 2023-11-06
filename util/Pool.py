@@ -18,5 +18,9 @@ redisPool = redis.ConnectionPool(host=os.getenv('REDIS_HOST'), port=os.getenv('R
                                  decode_responses=True)
 
 
+def getRedisConn():
+    return redis.Redis(connection_pool=redisPool)
+
+
 def getSqliteConn():
     return sqlite3.connect(Config.instance().get('sqlite_db'))

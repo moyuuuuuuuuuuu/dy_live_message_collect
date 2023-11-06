@@ -1,6 +1,7 @@
 from tkinter import Toplevel, filedialog, Label, Button, messagebox
 from util.Importer import Importer
 from component.progress import Progress as progress
+from model.Goods import Goods
 
 
 class InputGoodsWindow(Toplevel):
@@ -36,7 +37,7 @@ class InputGoodsWindow(Toplevel):
             importer = Importer()
             importer.load(goodsFile)
             goodsData = importer.toList()
-            if goodsData:
+            if goodsData and Goods().batchInsert(goodsData):
                 progressWindow.close()
             master.focus_force()
 
@@ -45,7 +46,7 @@ class InputGoodsWindow(Toplevel):
             f"+%d+%d" % (
                 (self.master.screenWidth - self.master.mainWidth / 4) // 2, (self.master.screenHeight - 40) / 2))
         Label(self, text='上传商品信息文件:').grid(row=2, column=0, padx=(0, 10), ipady=10)
-        self.chooseButton = Button(self, text="选择文件:",
+        self.chooseButton = Button(self, text="选择文件",
                                    command=self.chooseFile)
         self.chooseButton.grid(row=2, column=1, columnspan=2, padx=(0, 10), ipadx=60)
         Button(self, text="确定",

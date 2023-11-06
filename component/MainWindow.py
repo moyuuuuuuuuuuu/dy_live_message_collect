@@ -20,6 +20,7 @@ class MainWindow(Tk):
     def __init__(self):
         super().__init__()
 
+        self.inputWindow = None
         self.screenWidth, self.screenHeight = self.winfo_screenwidth(), self.winfo_screenheight()
         self.mainWidth, self.mainHeight = math.ceil(self.screenWidth / 2), math.ceil(self.screenHeight / 2)
 
@@ -117,53 +118,20 @@ class MainWindow(Tk):
     def refreshTable(self):
         self.tableFrame.reload()
 
-    def listenEntryChange(self, entryText):
-        self.liveId = entryText.get()
-
     def createGoodsInputWindow(self):
         self.inputGoodsWindow = InputGoodsWindow(self)
         self.inputGoodsWindow.show()
 
-    def createGoodsWindow(self):
-        pass
-
-    def closeGoodsInputWindow(self):
-        pass
-
     def createLiveInputWindow(self):
-        if self.spidering:
+        if self.inputWindow:
             messagebox.showinfo('提示', '正在采集，请勿重复操作')
             return
         self.inputWindow = InputLiveWindow(self, padx=5, pady=5)
         self.inputWindow.show()
         return
-        # Label(self.inputWindow, text='请输入直播间id:').grid(column=2, row=2)
-        # entryText = StringVar()
-        # entryText.trace('w', lambda name, index, mode, entryText=entryText: self.listenEntryChange(entryText))
-        # Entry(self.inputWindow, bd=1, textvariable=entryText).grid(column=4, row=2)
-        # Button(self.inputWindow, text='确定', command=self.createListenLiveWindow).grid(column=6, row=2)
-
-    def closeLiveInputWindow(self):
-        self.liveId = ''
-        self.inputWindow.destroy()
-        print(self.liveId)
 
     def createListenLiveWindow(self):
         self.inputWindow.destroy()
-        # 创建一个ListBox窗口
-        self.liveId = '44304010917'
-        print(self.liveId)
-        self.spidering = True
-        self.messageFrame = MessageFrame(self)
-        self.messageFrame.title = '直播间弹幕采集'
-        self.messageFrame.geometry(
-            '%dx%d+%d+%d' % (self.mainWidth, self.mainHeight, (self.screenWidth - self.mainWidth) // 2 + 30,
-                             (self.screenHeight - self.mainHeight) // 2 + 30))
-        self.messageFrame.protocol('WM_DELETE_WINDOW', self.messageFrame.close)
-        # self.messageFrame.grab_set()
-        # 更新主页面
-        self.messageFrame.pack_slaves()
-        self.messageFrame.start(liveId=self.liveId)
-        self.update()
+
         # self.spider.visit()
         # visitChrome(self.liveId)
