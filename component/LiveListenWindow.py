@@ -31,7 +31,7 @@ class LiveListenWindow(Toplevel):
             self.treeview.column(columns[i], anchor='center')
         # time.sleep()
         spider = Spider(master=self.treeview, liveId=liveId, userDictFile=userDictFile)
-        self.thread = Thread(target=spider.start())
+        self.thread = Thread(target=spider.start(), name=liveId)
         self.thread.start()
         self.thread.join()
 

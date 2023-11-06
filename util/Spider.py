@@ -73,9 +73,9 @@ class Spider():
 
                         currentTime = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                         # print(currentTime, id, es.text)
-                        self.master.insert('', 'end', values=(currentTime, id, es.text))
+                        self.master.insert('', '0', values=(currentTime, id, es.text))
                         # 分词检测
-                        self.master.master.update()
+                        # self.master.master.update()
                     except NoSuchElementException:
                         pass
                     except StaleElementReferenceException:
