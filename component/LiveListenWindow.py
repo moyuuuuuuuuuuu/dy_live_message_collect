@@ -1,4 +1,7 @@
+from threading import Thread
 from tkinter import Toplevel, messagebox, Button
+from tkinter.ttk import Treeview
+
 from util.Spider import Spider
 
 
@@ -19,14 +22,31 @@ class LiveListenWindow(Toplevel):
         self.spidering = True
         self.opera = opera
         self.protocol('WM_DELETE_WINDOW', self.close)
-        # 唤醒Spider 并把参数传给它
-        Spider(master=self, liveId=liveId, userDictFile=userDictFile).start()
+
+        columns = ('时间', '弹幕id', '内容')
+        self.treeview = Treeview(self, columns=columns, height=self.master.mainHeight // 20)
+        self.treeview.pack(fill='x', expand=True)
+        for i in range(len(columns)):
+            self.treeview.heading(columns[i], text=columns[i])
+            self.treeview.column(columns[i], anchor='center')
+        # time.sleep()
+        spider = Spider(master=self.treeview, liveId=liveId, userDictFile=userDictFile)
+        self.thread = Thread(target=spider.start())
+        self.thread.start()
+        self.thread.join()
+
+    def startSpider(self, liveId='', userDictFile='', treeview=None):
         pass
+
+    def warning(self):
+        if messagebox.showinfo('提示', '直播已经结束'):
+            self.spidering = False
 
     def close(self):
         if self.spidering:
-            if not messagebox.askquestion('销毁？', '正在采集，确定要退出吗？'):
+            if not messagebox.askyesno('销毁？', '正在采集，确定要退出吗？'):
                 return
+        self.spidering = False
         if self.opera != 0:
             # TODO:保存数据到excel或者数据库
             pass

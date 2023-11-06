@@ -1,6 +1,6 @@
+import time
 from tkinter import Toplevel, Frame, Label
 from tkinter.ttk import Progressbar
-import time
 
 
 class Progress:

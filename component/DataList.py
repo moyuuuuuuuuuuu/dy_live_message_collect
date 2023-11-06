@@ -1,8 +1,9 @@
 import math
 from tkinter import Frame, Menu, messagebox
 from tkinter.ttk import Treeview
-from util.MysqlClient import MysqlClient
+
 from logic.Logic import Logic
+from util.MysqlClient import MysqlClient
 
 
 class DataList(Frame):
@@ -149,14 +150,11 @@ class DataList(Frame):
         self.loadData().refresh()
 
     def reload(self):
-        # self.table.destroy()
-        # self.initTable(columns=self.columns, headers=self.headers, tablename=self.tablename)
         self.currentPage = self.options.get('startPage', 1)
         self.loadData().refresh()
 
     def initPageBar(self):
         from component.PaginationBar import PaginationBar
-
         self.pageBarFrame = PaginationBar(self, width=self.winfo_width(), height=40, padx=5, pady=5,
                                           bg='#d2d2d2')
         self.pageBarFrame.pack(fill='x')

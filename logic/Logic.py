@@ -1,9 +1,10 @@
-import os.path
+import datetime
+import math
+import redis
 
+from util.Exporter import Exporter
 from util.MysqlClient import MysqlClient
 from util.Pool import redisPool
-from util.Exporter import Exporter
-import redis, math, datetime, sys
 
 
 def getRedisClient():
@@ -40,7 +41,7 @@ class Logic:
                 pageData.append(list(message.values()))
             export.append(data=pageData)
         export.save()
-        MysqlClient.update('live', where={'id': id}, data={'is_excel': isExcel})
+        MysqlClient.update('live', where={'id': id}, data={'is_export_excel': isExcel})
         return True, '导出成功'
 
     @staticmethod

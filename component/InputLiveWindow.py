@@ -1,5 +1,6 @@
-from tkinter import Toplevel, Label, Text, Entry, Button, StringVar, filedialog, Radiobutton, IntVar
-from component.LiveListenWIndow import LiveListenWindow
+from tkinter import Toplevel, Label, Entry, Button, StringVar, filedialog, Radiobutton, IntVar
+
+from component.LiveListenWindow import LiveListenWindow
 
 
 class InputLiveWindow(Toplevel):
@@ -36,7 +37,7 @@ class InputLiveWindow(Toplevel):
         self.master.inputWindow = None
         self.destroy()
         # 创建直播间监听窗口
-        LiveListenWindow(master=master).show(userDictFile=userDictFile, liveId=324980718774, opera=self.opera.get())
+        LiveListenWindow(master=master).show(userDictFile=userDictFile, liveId=liveId, opera=self.opera.get())
 
     def chooseFile(self):
         self.userDictFile = filedialog.askopenfilename()

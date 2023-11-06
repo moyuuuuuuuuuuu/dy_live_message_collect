@@ -1,7 +1,8 @@
 from tkinter import Toplevel, filedialog, Label, Button, messagebox
-from util.Importer import Importer
+
 from component.progress import Progress as progress
 from model.Goods import Goods
+from util.Importer import Importer
 
 
 class InputGoodsWindow(Toplevel):

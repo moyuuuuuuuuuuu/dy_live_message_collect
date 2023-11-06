@@ -1,4 +1,5 @@
 from tkinter import LEFT, RIGHT, Button, Frame
+
 from component.DataList import DataList
 
 

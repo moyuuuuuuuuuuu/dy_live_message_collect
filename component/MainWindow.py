@@ -1,9 +1,9 @@
 #!/usr/bin/.env python
 # -*- coding: utf-8 -*-
-from tkinter import Frame, Button, Tk, LEFT, RIGHT, Toplevel, Label, Entry, StringVar, Text, messagebox
 import math
+from tkinter import Frame, Button, Tk, LEFT, RIGHT, messagebox
+
 from component.DataList import DataList
-from component.MessageFrame import MessageFrame
 from component.InputGoodsWindow import InputGoodsWindow
 from component.InputLiveWindow import InputLiveWindow
 

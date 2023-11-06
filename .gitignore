@@ -5,3 +5,4 @@
 /build/
 /spider.bak.py
 __pycache__
+test.*

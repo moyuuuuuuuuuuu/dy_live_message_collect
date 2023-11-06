@@ -1,6 +1,7 @@
-from util.Pool import mysqlPool
-from util.Logger import logger
 from mysql.connector.errors import Error as MysqlError
+
+from util.Logger import logger
+from util.Pool import mysqlPool
 
 
 class MysqlClient:
@@ -108,15 +109,16 @@ class MysqlClient:
         return MysqlClient._exec(sql, fetch='one', column=0, params=args)
 
     @staticmethod
-    def insert(tablename, **kwargs):
+    def insert(tablename, data={}):
         if not tablename:
             raise Exception("缺少表名")
-        keys = list(kwargs.keys())
-        values = list(kwargs.values())
+        keys = list(data.keys())
+        values = tuple(data.values())
         sql = "insert into {} ({}) values ({})".format(tablename, ','.join(keys), ','.join(['%s'] * len(keys)))
         conn = mysqlPool.get_connection()
         cursor = conn.cursor()
         cursor.execute(sql, values)
+        conn.commit()
         lastInertId = cursor.lastrowid
         cursor.close()
         conn.close()
@@ -124,10 +126,16 @@ class MysqlClient:
 
     @staticmethod
     def batchInsert(tablename, columns, data):
+        """
+
+        :param tablename: str
+        :param columns: tuple
+        :param data:[[]]
+        :return:
+        """
         if not tablename:
             raise Exception("缺少表名")
-        keys = columns
-        sql = "insert into {} ({}) values ({})".format(tablename, ','.join(keys), ','.join(['?'] * len(columns)))
+        sql = "insert into {} ({}) values ({})".format(tablename, ','.join(columns), ','.join(['?'] * len(columns)))
         conn = mysqlPool.get_connection()
         cursor = conn.cursor()
         cursor.execute('BEGIN TRANSACTION')
@@ -144,23 +152,25 @@ class MysqlClient:
         return True
 
     @staticmethod
-    def update(tablename, where='', **kwargs):
+    def update(tablename, where='', data={}):
         if not tablename:
             raise Exception("缺少表名")
-        keys = list(kwargs.keys())
-        values = tuple(list(kwargs.values()))
+        keys = list(data.keys())
+        values = tuple(data.values())
         sql = "update {} set {} ".format(tablename, ','.join(['{}=%s'.format(key) for key in keys]))
         if where:
             whereString, whereArgs = MysqlClient.buildWhere(where)
             sql += " where {}".format(whereString)
             values = values + whereArgs
+        print(sql, values)
         conn = mysqlPool.get_connection()
         cursor = conn.cursor()
         cursor.execute(sql, values)
-        modifyLine = cursor.rowcount
+        conn.commit()
+        modify = cursor.rowcount
         conn.close()
         cursor.close()
-        return modifyLine
+        return modify
 
     @staticmethod
     def deleteByPk(table, id):

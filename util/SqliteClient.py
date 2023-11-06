@@ -1,6 +1,7 @@
-from util.Pool import getSqliteConn
-from util.Logger import logger
 import sqlite3
+
+from util.Logger import logger
+from util.Pool import getSqliteConn
 
 
 class SqliteClient:
@@ -111,15 +112,16 @@ class SqliteClient:
         return SqliteClient._exec(sql, fetch='one', column=0, params=args)
 
     @staticmethod
-    def insert(tablename, **kwargs):
+    def insert(tablename, data={}):
         if not tablename:
             raise Exception("缺少表名")
-        keys = list(kwargs.keys())
-        values = list(kwargs.values())
+        keys = list(data.keys())
+        values = list(data.values())
         sql = "insert into {} ({}) values ({})".format(tablename, ','.join(keys), ','.join(['?'] * len(values)))
         conn = getSqliteConn()
         cursor = conn.cursor()
         cursor.execute(sql, values)
+        conn.commit()
         lastInertId = cursor.lastrowid
         cursor.close()
         conn.close()
@@ -148,11 +150,11 @@ class SqliteClient:
         return True
 
     @staticmethod
-    def update(tablename, where='', **kwargs):
+    def update(tablename, where='', data={}):
         if not tablename:
             raise Exception("缺少表名")
-        keys = list(kwargs.keys())
-        values = tuple(list(kwargs.values()))
+        keys = list(data.keys())
+        values = tuple(list(data.values()))
         sql = "update {} set {} ".format(tablename, ','.join(['{}=?'.format(key) for key in keys]))
         if where:
             whereString, whereArgs = SqliteClient.buildWhere(where)
@@ -161,6 +163,7 @@ class SqliteClient:
         conn = getSqliteConn()
         cursor = conn.cursor()
         cursor.execute(sql, values)
+        conn.commit()
         modifyLine = cursor.total_changes
         conn.close()
         cursor.close()

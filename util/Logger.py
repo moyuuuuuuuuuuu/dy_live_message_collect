@@ -1,6 +1,9 @@
-import logging, hashlib, os
-from util.Config import Config
+import hashlib
+import logging
+import os
 from datetime import datetime
+
+from util.Config import Config
 
 
 def getlogfile():

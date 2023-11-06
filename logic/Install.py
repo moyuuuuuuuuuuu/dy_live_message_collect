@@ -1,7 +1,8 @@
 import os
-from util.Pool import getSqliteConn
+
 from util.Config import Config
 from util.Logger import getlogfile
+from util.Pool import getSqliteConn
 
 
 class Install:

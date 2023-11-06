@@ -1,7 +1,10 @@
 import os
-import redis, sqlite3
+
+import redis
+import sqlite3
 from dotenv import load_dotenv
 from mysql.connector.pooling import MySQLConnectionPool
+
 from util.Config import Config
 
 load_dotenv()

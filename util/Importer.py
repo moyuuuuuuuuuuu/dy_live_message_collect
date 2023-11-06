@@ -1,4 +1,5 @@
-import pandas, os
+import os
+import pandas
 
 
 class Importer:
