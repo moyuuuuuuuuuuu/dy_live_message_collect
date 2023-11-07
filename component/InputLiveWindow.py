@@ -35,9 +35,11 @@ class InputLiveWindow(Toplevel):
         userDictFile = self.userDictFile
         liveId = self.liveIdStringVar.get()
         self.master.inputWindow = None
-        self.destroy()
+
         # 创建直播间监听窗口
-        LiveListenWindow(master=master).show(userDictFile=userDictFile, liveId=liveId, opera=self.opera.get())
+        child = LiveListenWindow(master=master).show(userDictFile=userDictFile, liveId=liveId, opera=self.opera.get())
+        self.wait_window(child)
+        self.destroy()
 
     def chooseFile(self):
         self.userDictFile = filedialog.askopenfilename()

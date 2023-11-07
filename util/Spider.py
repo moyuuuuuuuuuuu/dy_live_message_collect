@@ -2,7 +2,10 @@
 # -*- coding: utf-8 -*-
 
 import datetime
+import json
+import queue
 import random
+import threading
 import time
 from threading import Timer
 from tkinter import Tk
@@ -12,8 +15,8 @@ from selenium.common.exceptions import NoSuchElementException, StaleElementRefer
 from selenium.webdriver import Chrome, ActionChains
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
-
 from util.Pool import getRedisConn
+from queue import Queue
 
 
 class Spider():
@@ -22,11 +25,10 @@ class Spider():
         self.userDictFile = userDictFile
         self.master = master
 
-    def start(self, liveId=''):
+    def start(self, q: queue.Queue):
         if self.master.master:
             self.master.focus_force()
-        if not liveId:
-            liveId = self.liveId
+        liveId = self.liveId
         pageUrl = "https://live.douyin.com/{}".format(liveId)
 
         option = Options()
@@ -42,7 +44,9 @@ class Spider():
         timer.start()
         print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "启动了")
         time.sleep(1)
-        while self.master.master.spidering:
+        while True:
+            if not self.master.master.spidering:
+                break
             try:
                 overEle = self.web.find_element(By.XPATH,
                                                 '//*[@id="_douyin_live_scroll_container_"]/div/div/div/div[2]/div[2]/div[2]/div')
@@ -64,16 +68,13 @@ class Spider():
                         hashKey = 'dy:message:hash:{}:{}'.format(liveId, id)
                         if not es or redisConn.exists(hashKey):
                             continue
-                        pushKey = 'dy:message:push:{}'.format(liveId)
-
-                        redisConn.lpush(pushKey, id)
-                        redisConn.hset(hashKey, 'id', id)
-                        redisConn.hset(hashKey, 'content', es.text)
-                        redisConn.hset(hashKey, 'time', int(time.time()))
+                        # pushKey = 'dy:message:push:{}'.format(liveId)
+                        message = json.dumps({"content": es.text, "time": time.time(), "id": id, "liveId": liveId})
+                        q.put(item=message)
 
                         currentTime = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                         # print(currentTime, id, es.text)
-                        self.master.insert('', '0', values=(currentTime, id, es.text))
+                        # self.master.insert('', '0', values=(currentTime, id, es.text))
                         # 分词检测
                         # self.master.master.update()
                     except NoSuchElementException:

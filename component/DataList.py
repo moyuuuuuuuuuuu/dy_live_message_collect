@@ -1,7 +1,7 @@
 import math
 from tkinter import Frame, Menu, messagebox
 from tkinter.ttk import Treeview
-
+from util.threadhelper import createThread
 from logic.Logic import Logic
 from util.MysqlClient import MysqlClient
 
@@ -54,9 +54,9 @@ class DataList(Frame):
     def initMenu(self):
         menu = Menu(self.table, tearoff=0)
         commandList = [
-            {'label': '导出Excel', 'command': lambda: self.exportItem()},
-            {'label': '导出云图', 'command': lambda: self.exportWordItem()},
-            {'label': '删除', 'command': lambda: self.deleteItem()},
+            {'label': '导出Excel', 'command': lambda: createThread(DataList.exportItem, name='导出', args=(self,))},
+            {'label': '导出云图', 'command': lambda: createThread(DataList.exportWordItem, name='导出', args=(self,))},
+            {'label': '删除', 'command': lambda: createThread(DataList.deleteItem, name='删除', args=(self,))},
         ]
         for command in commandList:
             menu.add_command(label=command['label'], command=command['command'])
